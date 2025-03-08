@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   :root {
@@ -32,25 +34,26 @@
 
     --radius: 0.5rem;
   }
-}
 
-@layer base {
   * {
-    @apply border-border;
+    @apply border-border; /* Aplica a cor da borda */
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground; /* Aplica o fundo e a cor do texto */
   }
 }
 
-.glass {
-  @apply bg-opacity-20 backdrop-blur-lg backdrop-filter border border-white/10 shadow-lg;
-}
+@layer components {
+  .glass {
+    @apply bg-opacity-20 backdrop-blur-lg backdrop-filter border border-white/10 shadow-lg;
+  }
 
-.glass-card {
-  @apply bg-opacity-30 backdrop-blur-md backdrop-filter border border-white/10 shadow-lg;
-}
+  .glass-card {
+    @apply bg-opacity-30 backdrop-blur-md backdrop-filter border border-white/10 shadow-lg;
+  }
 
-.glass-dialog {
-  @apply bg-opacity-40 backdrop-blur-xl backdrop-filter border border-white/20 shadow-xl;
+  .glass-dialog {
+    @apply bg-opacity-40 backdrop-blur-xl backdrop-filter border border-white/20 shadow-xl;
+  }
 }
