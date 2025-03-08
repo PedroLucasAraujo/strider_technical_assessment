@@ -1,5 +1,18 @@
-function App() {
-  return <h1 className="text-3xl font-bold underline">Hello World</h1>;
-}
+// src/App.tsx
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { RootLayout } from "./layouts/RootLayout";
+import { Home } from "./pages/Home";
 
-export default App;
+export const App: React.FC = () => {
+  return (
+    <Router>
+      <RootLayout>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          {/* Adicione outras rotas aqui */}
+        </Routes>
+      </RootLayout>
+    </Router>
+  );
+};
