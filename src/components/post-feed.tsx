@@ -1,12 +1,12 @@
 import { useEffect } from "react";
-import { Post } from "./Post"; // Ajuste o caminho conforme necessário
+import { Post } from "./post";
 import { useAppDispatch, useAppSelector } from "../lib/redux/hooks";
 import {
   fetchPosts,
   selectFilteredPosts,
   selectPostsStatus,
 } from "../lib/redux/postsSlice";
-import { useUser } from "../lib/user-context"; // Ajuste o caminho conforme necessário
+import { useUser } from "../lib/user-context";
 
 interface PostFeedProps {
   filter: "all" | "following" | "user" | "search";

@@ -10,7 +10,6 @@ export const App: React.FC = () => {
       <RootLayout>
         <Routes>
           <Route path="/" element={<Home />} />
-          {/* Adicione outras rotas aqui */}
         </Routes>
       </RootLayout>
     </Router>

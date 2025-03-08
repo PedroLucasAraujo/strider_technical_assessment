@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { PostFeed } from "./ui/PostFeed";
-import { NewPostForm } from "./ui/NewPostForm";
+import { PostFeed } from "./post-feed";
+import { NewPostForm } from "./new-post-form";
 import { useUser } from "../lib/user-context";
 import { getUserByUsername, followUser, unfollowUser } from "../lib/data";
 import type { User } from "../@types/index";

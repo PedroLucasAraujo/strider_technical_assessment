@@ -7,9 +7,9 @@ import {
   TabsList,
   TabsTrigger,
 } from "../components/ui/tabs";
-import { PostFeed } from "@/components/PostFeed";
-import { NewPostForm } from "@/components/NewPostForm";
-import { SearchBar } from "@/components/SearchBar";
+import { PostFeed } from "../components/post-feed";
+import { NewPostForm } from "../components/new-post-form";
+import { SearchBar } from "../components/search-bar";
 
 export const Home: React.FC = () => {
   const [searchParams] = useSearchParams();

@@ -1,14 +1,14 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom"; // Substitua pelo seu gerenciador de rotas
-import { Card, CardContent, CardFooter, CardHeader } from "./ui/card"; // Ajuste o caminho conforme necessário
-import { Button } from "./ui/button"; // Ajuste o caminho conforme necessário
-import { Textarea } from "./ui/textarea"; // Ajuste o caminho conforme necessário
-import { Post as PostType, PostType as PostTypeEnum } from "../lib/types"; // Ajuste o caminho conforme necessário
-import { useUser } from "../lib/user-context"; // Ajuste o caminho conforme necessário
+import { Link } from "react-router-dom";
+import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
+import { Button } from "./ui/button";
+import { Textarea } from "./ui/textarea";
+import { Post as PostType, PostType as PostTypeEnum } from "../lib/types";
+import { useUser } from "../lib/user-context";
 import { formatDistanceToNow } from "date-fns";
 import { MessageSquare, Repeat } from "lucide-react";
-import { useAppDispatch } from "../lib/redux/hooks"; // Ajuste o caminho conforme necessário
-import { createPost } from "../lib/redux/postsSlice"; // Ajuste o caminho conforme necessário
+import { useAppDispatch } from "../lib/redux/hooks";
+import { createPost } from "../lib/redux/postsSlice";
 
 interface PostProps {
   post: PostType;
