@@ -1,0 +1,1 @@
+# strider_technical_assessment
