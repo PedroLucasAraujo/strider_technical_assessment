@@ -1,10 +1,8 @@
-"use server";
-
-import { type User, type Post, PostType, type CreatePostData } from "./types";
 import { v4 as uuidv4 } from "uuid";
+import { User, Post, PostType, CreatePostData } from "./types";
 
 // In-memory data store
-const users: User[] = [
+let users: User[] = [
   {
     id: "1",
     username: "johndoe",
@@ -106,86 +104,164 @@ let posts: Post[] = [
     createdAt: "2023-06-21T14:20:00Z",
     type: PostType.REGULAR,
   },
+  {
+    id: "8",
+    content: "I agree! It adds a nice depth to the interface.",
+    authorId: "1",
+    author: users[0],
+    createdAt: "2023-06-21T15:30:00Z",
+    type: PostType.REPLY,
+    replyToId: "7",
+    replyTo: {
+      id: "7",
+      content: "Glassmorphism is a cool UI trend",
+      authorId: "3",
+      author: users[2],
+      createdAt: "2023-06-21T14:20:00Z",
+      type: PostType.REGULAR,
+    },
+  },
+  {
+    id: "9",
+    content: "What resources are you using to learn Redux?",
+    authorId: "2",
+    author: users[1],
+    createdAt: "2023-06-19T13:15:00Z",
+    type: PostType.REPLY,
+    replyToId: "5",
+    replyTo: {
+      id: "5",
+      content: "Learning about Redux and state management today!",
+      authorId: "1",
+      author: users[0],
+      createdAt: "2023-06-19T11:30:00Z",
+      type: PostType.REGULAR,
+    },
+  },
+  {
+    id: "10",
+    content: "The official Redux documentation and some YouTube tutorials.",
+    authorId: "1",
+    author: users[0],
+    createdAt: "2023-06-19T14:20:00Z",
+    type: PostType.REPLY,
+    replyToId: "9",
+    replyTo: {
+      id: "9",
+      content: "What resources are you using to learn Redux?",
+      authorId: "2",
+      author: users[1],
+      createdAt: "2023-06-19T13:15:00Z",
+      type: PostType.REPLY,
+    },
+  },
 ];
 
+// Helper function to get user by ID
 const getUserById = (id: string): User | undefined => {
   return users.find((user) => user.id === id);
 };
 
-export async function getCurrentUser(): Promise<User> {
-  return users[0];
-}
+// Helper function to get post by ID
+const getPostById = (id: string): Post | undefined => {
+  return posts.find((post) => post.id === id);
+};
 
-export async function getUserByUsername(
-  username: string
-): Promise<User | null> {
+// Get current user (for demo purposes, we'll use the first user)
+export const getCurrentUser = (): Promise<User> => {
+  return Promise.resolve(users[0]);
+};
+
+// Get user by username
+export const getUserByUsername = (username: string): Promise<User | null> => {
   const user = users.find((user) => user.username === username);
-  return user || null;
-}
+  return Promise.resolve(user || null);
+};
 
-export async function getPosts(
+// Get posts with optional filtering
+export const getPosts = (
   userIds?: string[],
   username?: string
-): Promise<Post[]> {
+): Promise<Post[]> => {
   let filteredPosts = [...posts];
 
+  // Filter by user IDs (for following feed)
   if (userIds && userIds.length > 0) {
     filteredPosts = filteredPosts.filter((post) =>
       userIds.includes(post.authorId)
     );
   }
 
+  // Filter by username
   if (username) {
-    const user = await getUserByUsername(username);
+    const user = users.find((user) => user.username === username);
     if (user) {
       filteredPosts = filteredPosts.filter((post) => post.authorId === user.id);
     } else {
-      return [];
+      return Promise.resolve([]);
     }
   }
 
-  return filteredPosts.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  // Sort by creation date (newest first)
+  return Promise.resolve(
+    filteredPosts.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
   );
-}
+};
 
-export async function searchPosts(query: string): Promise<Post[]> {
+// Search posts
+export const searchPosts = (query: string): Promise<Post[]> => {
   if (!query.trim()) {
-    return [];
+    return Promise.resolve([]);
   }
 
   const normalizedQuery = query.toLowerCase().trim();
 
-  return posts
-    .filter((post) => {
-      if (post.type === PostType.REPOST) {
-        return false;
-      }
-
-      if (post.type === PostType.REGULAR) {
-        return post.content.toLowerCase().includes(normalizedQuery);
-      }
-
-      if (post.type === PostType.QUOTE) {
-        return post.content.toLowerCase().includes(normalizedQuery);
-      }
-
+  const filteredPosts = posts.filter((post) => {
+    // Don't include reposts in search results
+    if (post.type === PostType.REPOST) {
       return false;
-    })
-    .sort(
+    }
+
+    // For regular posts, check if content matches
+    if (post.type === PostType.REGULAR) {
+      return post.content.toLowerCase().includes(normalizedQuery);
+    }
+
+    // For quote posts, only check the added text (not the original post)
+    if (post.type === PostType.QUOTE) {
+      return post.content.toLowerCase().includes(normalizedQuery);
+    }
+
+    // For reply posts, check if content matches
+    if (post.type === PostType.REPLY) {
+      return post.content.toLowerCase().includes(normalizedQuery);
+    }
+
+    return false;
+  });
+
+  return Promise.resolve(
+    filteredPosts.sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-}
+    )
+  );
+};
 
-export async function createPost(data: CreatePostData): Promise<Post> {
-  const { content, authorId, type, originalPostId } = data;
+// Create a new post
+export const createPost = (data: CreatePostData): Promise<Post> => {
+  const { content, authorId, type, originalPostId, replyToId } = data;
 
+  // Validate user exists
   const author = getUserById(authorId);
   if (!author) {
-    throw new Error("User not found");
+    return Promise.reject(new Error("User not found"));
   }
 
+  // Check daily post limit (5 posts per day)
   const today = new Date();
   const startOfDay = new Date(
     today.getFullYear(),
@@ -200,27 +276,47 @@ export async function createPost(data: CreatePostData): Promise<Post> {
   );
 
   if (postsToday.length >= 5) {
-    throw new Error("You have reached the daily limit of 5 posts");
+    return Promise.reject(
+      new Error("You have reached the daily limit of 5 posts")
+    );
   }
 
+  // Validate content length
   if (content.length > 777) {
-    throw new Error("Post cannot exceed 777 characters");
+    return Promise.reject(new Error("Post cannot exceed 777 characters"));
   }
 
+  // For reposts and quote posts, validate original post exists
   let originalPost: Post | undefined;
-  if (type !== PostType.REGULAR) {
+  if (type === PostType.REPOST || type === PostType.QUOTE) {
     if (!originalPostId) {
-      throw new Error(
-        "Original post ID is required for reposts and quote posts"
+      return Promise.reject(
+        new Error("Original post ID is required for reposts and quote posts")
       );
     }
 
-    originalPost = posts.find((post) => post.id === originalPostId);
+    originalPost = getPostById(originalPostId);
     if (!originalPost) {
-      throw new Error("Original post not found");
+      return Promise.reject(new Error("Original post not found"));
     }
   }
 
+  // For reply posts, validate reply-to post exists
+  let replyTo: Post | undefined;
+  if (type === PostType.REPLY) {
+    if (!replyToId) {
+      return Promise.reject(
+        new Error("Reply-to post ID is required for replies")
+      );
+    }
+
+    replyTo = getPostById(replyToId);
+    if (!replyTo) {
+      return Promise.reject(new Error("Reply-to post not found"));
+    }
+  }
+
+  // Create the new post
   const newPost: Post = {
     id: uuidv4(),
     content,
@@ -230,10 +326,14 @@ export async function createPost(data: CreatePostData): Promise<Post> {
     type,
     originalPostId,
     originalPost,
+    replyToId,
+    replyTo,
   };
 
+  // Add to posts array
   posts = [newPost, ...posts];
 
+  // Update user's post count
   const userIndex = users.findIndex((user) => user.id === authorId);
   if (userIndex !== -1) {
     users[userIndex] = {
@@ -242,29 +342,30 @@ export async function createPost(data: CreatePostData): Promise<Post> {
     };
   }
 
-  return newPost;
-}
+  return Promise.resolve(newPost);
+};
 
-export async function followUser(
+// Follow a user
+export const followUser = (
   followerId: string,
   followeeId: string
-): Promise<void> {
+): Promise<void> => {
   // Validate users exist
   const follower = getUserById(followerId);
   const followee = getUserById(followeeId);
 
   if (!follower || !followee) {
-    throw new Error("User not found");
+    return Promise.reject(new Error("User not found"));
   }
 
   // Can't follow yourself
   if (followerId === followeeId) {
-    throw new Error("You cannot follow yourself");
+    return Promise.reject(new Error("You cannot follow yourself"));
   }
 
   // Check if already following
   if (follower.following.includes(followeeId)) {
-    return; // Already following, no action needed
+    return Promise.resolve(); // Already following, no action needed
   }
 
   // Update follower's following list
@@ -280,32 +381,45 @@ export async function followUser(
     ...users[followeeIndex],
     followers: [...users[followeeIndex].followers, followerId],
   };
-}
 
-export async function unfollowUser(
+  return Promise.resolve();
+};
+
+// Unfollow a user
+export const unfollowUser = (
   followerId: string,
   followeeId: string
-): Promise<void> {
+): Promise<void> => {
+  // Validate users exist
   const follower = getUserById(followerId);
   const followee = getUserById(followeeId);
 
   if (!follower || !followee) {
-    throw new Error("User not found");
+    return Promise.reject(new Error("User not found"));
   }
 
+  // Check if actually following
   if (!follower.following.includes(followeeId)) {
-    return;
+    return Promise.resolve(); // Not following, no action needed
   }
 
+  // Update follower's following list
   const followerIndex = users.findIndex((user) => user.id === followerId);
   users[followerIndex] = {
     ...users[followerIndex],
-    following: users[followerIndex].following.filter((id) => id !== followeeId),
+    following: users[followerIndex].following.filter(
+      (id: string) => id !== followeeId
+    ),
   };
 
+  // Update followee's followers list
   const followeeIndex = users.findIndex((user) => user.id === followeeId);
   users[followeeIndex] = {
     ...users[followeeIndex],
-    followers: users[followeeIndex].followers.filter((id) => id !== followerId),
+    followers: users[followeeIndex].followers.filter(
+      (id: string) => id !== followerId
+    ),
   };
-}
+
+  return Promise.resolve();
+};

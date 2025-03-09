@@ -2,8 +2,8 @@ export interface User {
   id: string;
   username: string;
   joinedAt: string;
-  followers: string[];
-  following: string[];
+  followers: string[]; // Array of user IDs
+  following: string[]; // Array of user IDs
   postCount: number;
 }
 
@@ -11,6 +11,7 @@ export enum PostType {
   REGULAR = "regular",
   REPOST = "repost",
   QUOTE = "quote",
+  REPLY = "reply",
 }
 
 export interface Post {
@@ -22,6 +23,8 @@ export interface Post {
   type: PostType;
   originalPostId?: string;
   originalPost?: Post;
+  replyToId?: string;
+  replyTo?: Post;
 }
 
 export interface CreatePostData {
@@ -29,4 +32,5 @@ export interface CreatePostData {
   authorId: string;
   type: PostType;
   originalPostId?: string;
+  replyToId?: string;
 }

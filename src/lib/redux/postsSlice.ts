@@ -3,7 +3,11 @@ import {
   createAsyncThunk,
   type PayloadAction,
 } from "@reduxjs/toolkit";
-import { getPosts as getPostsApi, createPost as createPostApi } from "../data";
+import {
+  getPosts as getPostsApi,
+  createPost as createPostApi,
+  searchPosts as searchPostsApi,
+} from "../data";
 import { type Post, PostType, type CreatePostData } from "../types";
 import type { RootState } from "./store";
 
@@ -19,6 +23,7 @@ const initialState: PostsState = {
   error: null,
 };
 
+// Async Thunks
 export const fetchPosts = createAsyncThunk("posts/fetchPosts", async () => {
   const response = await getPostsApi();
   return response;
@@ -32,6 +37,15 @@ export const createPost = createAsyncThunk(
   }
 );
 
+export const searchPosts = createAsyncThunk(
+  "posts/searchPosts",
+  async (query: string) => {
+    const response = await searchPostsApi(query);
+    return response;
+  }
+);
+
+// Slice
 const postsSlice = createSlice({
   name: "posts",
   initialState,
@@ -51,7 +65,14 @@ const postsSlice = createSlice({
       })
       .addCase(createPost.fulfilled, (state, action: PayloadAction<Post>) => {
         state.posts.unshift(action.payload);
-      });
+      })
+      .addCase(
+        searchPosts.fulfilled,
+        (state, action: PayloadAction<Post[]>) => {
+          // Não atualizamos o array principal de posts com os resultados da pesquisa
+          // Eles são filtrados no seletor
+        }
+      );
   },
 });
 
@@ -80,18 +101,20 @@ export const selectFilteredPosts = (
   if (filter === "search" && searchQuery) {
     const query = searchQuery.toLowerCase();
     return allPosts.filter((post) => {
-      // Don't include reposts in search results
+      // Não incluir reposts nos resultados da pesquisa
       if (post.type === PostType.REPOST) {
         return false;
       }
 
-      // For regular posts, check if content matches
       if (post.type === PostType.REGULAR) {
         return post.content.toLowerCase().includes(query);
       }
 
-      // For quote posts, only check the added text (not the original post)
       if (post.type === PostType.QUOTE) {
+        return post.content.toLowerCase().includes(query);
+      }
+
+      if (post.type === PostType.REPLY) {
         return post.content.toLowerCase().includes(query);
       }
 

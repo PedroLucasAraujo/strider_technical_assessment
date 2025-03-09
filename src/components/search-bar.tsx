@@ -13,6 +13,7 @@ export function SearchBar() {
     if (query.trim()) {
       navigate(`/search?q=${encodeURIComponent(query)}`);
     }
+    window.location.reload();
   };
 
   return (
